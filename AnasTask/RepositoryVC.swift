@@ -6,8 +6,7 @@
 //
 
 import UIKit
-
-
+import Network
 
 class RepositoryVC: UIViewController ,UISearchBarDelegate{
     @IBOutlet weak var searchBar: UISearchBar!
@@ -17,17 +16,35 @@ class RepositoryVC: UIViewController ,UISearchBarDelegate{
         return RepositoryViewModel()
     }()
     var filteredData:[SearchResult] = []
+    let reachability = try! Reachability()
     override func viewDidLoad() {
         super.viewDidLoad()
         searchBar.delegate = self
+        
+        self.reachability.whenReachable = { _ in
+//            if reachability.connection == .wifi {
+//                self.showAlert(reachability.connection.description)
+//            } else  if reachability.connection == .cellular {
+//                self.showAlert(reachability.connection.description)
+//            }
+            self.initReposList()
+        }
+        self.reachability.whenUnreachable = { unreach in
+            self.showAlert(unreach.connection.description)
+        }
+        
+        do {
+            try self.reachability.startNotifier()
+        } catch {
+            print("Unable to start notifier")
+        }
+        
     }
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        initReposList()
-    }
+    
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         viewModel.allRepos = []
+        reachability.stopNotifier()
     }
 
     
